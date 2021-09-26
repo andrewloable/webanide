@@ -3,3 +3,8 @@
 ################################################################################
 
 /.vs/Webanide
+/Sample1/bin/Debug/net5.0
+/Sample1/obj
+/Webanide/.vs/Webanide
+/Webanide/bin/Debug/net5.0
+/Webanide/obj
