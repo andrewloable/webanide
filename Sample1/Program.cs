@@ -10,7 +10,7 @@ namespace Sample1
         {
             try
             {
-                var ui = UI.New("https://loable.tech", "", 800, 700);
+                var ui = UI.New("", "", 800, 800);
                 Console.ReadLine();
             }
             catch (Exception ex)

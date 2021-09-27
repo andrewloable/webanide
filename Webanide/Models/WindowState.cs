@@ -5,6 +5,6 @@
         Normal,
         Maximized,
         Minimized,
-        Fullscreen
+        NoFrame
     }
 }

@@ -16,7 +16,8 @@ namespace Webanide
 {
     public class Chrome
     {
-        public int ID { get; set; }
+        public string ID { get; set; }
+        public int MessageID { get; set; }
         public string Target { get; set; }
         public string Session { get; set; }
         public int Window { get; set; }
@@ -24,12 +25,16 @@ namespace Webanide
         public Dictionary<string, BindingFunction> Bindings { get; set; }
         public ClientWebSocket WSClient { get; set; }
         public Process ChromeCommand { get; set; }
-
+        public Config Config { get; set; }
+        public Chrome()
+        {
+            Config = GetConfig();
+        }
         public static async Task<Chrome> ChromeFactory(string binaryPath, string args)
         {
             var retval = new Chrome()
             {
-                ID = 2,
+                MessageID = 2,
                 Pending = new Dictionary<int, Result>(),
                 Bindings = new Dictionary<string, BindingFunction>()
             };
@@ -66,73 +71,17 @@ namespace Webanide
             retval.Session = await retval.StartSession(retval.Target);
             return retval;
         }
-        public static string LocateChrome(string customPath = "")
+        private static Config GetConfig()
         {
-            var envpath = Environment.GetEnvironmentVariable("ChromePath");
-            if (!string.IsNullOrWhiteSpace(envpath) && File.Exists(envpath))
+            if (File.Exists("webanide-config.json"))
             {
-                return envpath;
+                var configText = File.ReadAllText("webanide-config.json");
+                var config = JObject.Parse(configText).ToObject<Config>();
+                return config;
             }
-
-            if (!string.IsNullOrWhiteSpace(customPath) && File.Exists(customPath))
-            {
-                return customPath;
-            }
-
-            string[] Paths;
-            if (OperatingSystem.IsMacOS())
-            {
-                Paths = new string[]
-                {
-                    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-                    "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
-                    "/Applications/Chromium.app/Contents/MacOS/Chromium",
-                    "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-                    "/usr/bin/google-chrome-stable",
-                    "/usr/bin/google-chrome",
-                    "/usr/bin/chromium",
-                    "/usr/bin/chromium-browser"
-                };
-            }
-            else if (OperatingSystem.IsWindows())
-            {
-                const string chromepath = "/Google/Chrome/Application/chrome.exe";
-                const string edgepath = "/Microsoft/Edge/Application/msedge.exe";
-                const string chromiumpath = "/Chromium/Application/chrome.exe";
-                Paths = new string[]
-                {
-                    $"{Environment.GetEnvironmentVariable("LocalAppData")}{chromepath}",
-                    $"{Environment.GetEnvironmentVariable("ProgramFiles")}{chromepath}",
-                    $"{Environment.GetEnvironmentVariable("ProgramFiles(x86)")}{chromepath}",
-                    $"{Environment.GetEnvironmentVariable("LocalAppData")}{chromiumpath}",
-                    $"{Environment.GetEnvironmentVariable("ProgramFiles")}{chromiumpath}",
-                    $"{Environment.GetEnvironmentVariable("ProgramFiles(x86)")}{chromiumpath}",
-                    $"{Environment.GetEnvironmentVariable("ProgramFiles")}{edgepath}",
-                    $"{Environment.GetEnvironmentVariable("ProgramFiles(x86)")}{edgepath}",
-                };
-            }
-            else
-            {
-                Paths = new string[]
-                {
-                    "/usr/bin/google-chrome-stable",
-                    "/usr/bin/google-chrome",
-                    "/usr/bin/chromium",
-                    "/usr/bin/chromium-browser",
-                    "/snap/bin/chromium"
-                };
-            }
-            foreach(var p in Paths)
-            {
-                if (!File.Exists(p))
-                {
-                    continue;
-                }
-                return p;
-            }
-
-            throw new Exception("Chrome/Chromium/MS Edge Path not found");
+            throw new Exception("webanide-config.json not found.");
         }
+        
         private static async Task<string[]> GetWSResponse(ClientWebSocket ws, int msgid)
         {
             var retval = new List<string>();
@@ -142,8 +91,6 @@ namespace Webanide
             {
                 using (var ms = new MemoryStream())
                 {
-                    var test1 = ws.State;
-                    var test2 = ws.CloseStatus;
                     do
                     {
                         result = await ws.ReceiveAsync(buffer, CancellationToken.None);
@@ -226,10 +173,10 @@ namespace Webanide
         {
             var p = new JObject();
             p["url"] = url;
-            this.ID++;
+            this.MessageID++;
             var navigatemsg = new Message()
             {
-                ID = this.ID,
+                ID = this.MessageID,
                 Method = "Page.navigate",
                 Params = p
             };
@@ -238,7 +185,7 @@ namespace Webanide
             p["sessionId"] = this.Session;
             var msg = new Message()
             {
-                ID = this.ID,
+                ID = this.MessageID,
                 Method = "Target.sendMessageToTarget",
                 Params = pm
             };

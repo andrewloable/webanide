@@ -1,12 +1,22 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <Version>0.0.1</Version>
+    <Version>0.0.2</Version>
     <Authors>Andrew M. Loable</Authors>
     <Company>Loable Technologies</Company>
     <Copyright>(c) Andrew M. Loable</Copyright>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="webanide-config.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="webanide-config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
